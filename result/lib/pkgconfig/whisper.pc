@@ -1,0 +1,10 @@
+prefix=/nix/store/7nfns6i8glfbs1fxrdqm5jvvs3bh2ws6-whisper-cpp-1.7.5
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: whisper
+Description: Port of OpenAI's Whisper model in C/C++
+Version: 1.7.5
+Libs: -L${libdir} -lggml  -lggml-base -lwhisper
+Cflags: -I${includedir}

@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e8b3927f-bc71-4c62-ac53-fb7ac88220e7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/detekt.py" beforeDir="false" afterPath="$PROJECT_DIR$/detekt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/whisper_stream.py" beforeDir="false" afterPath="$PROJECT_DIR$/whisper_stream.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whisper_stream.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +19,12 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/imartemy1524/Agents.git",
+    "accountId": "992b65c7-a380-445b-9e5c-d7df313a0309"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 0
@@ -174,12 +180,35 @@
       <workItem from="1744981432733" duration="463000" />
       <workItem from="1747072830880" duration="69000" />
       <workItem from="1747076005977" duration="11284000" />
-      <workItem from="1747089121184" duration="755000" />
+      <workItem from="1747089121184" duration="1853000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <watches-manager>

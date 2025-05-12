@@ -1,24 +1,17 @@
 import sys
-import time # Consider adding if WhisperStream needs explicit pauses/sleeps
-from detekt import WhisperStream # Assuming this is correctly installed/available
-from llm_agent import LLMAgent # Import the new agent
+import time
+from detekt import WhisperStream
+from llm_agent import LLMAgent
 
-SERVER_EXECUTABLE = "./result/bin/whisper-stream" # Make sure this path is correct
-ACTIVATION_PHRASE = "hi" # Case-insensitive activation phrase
-AUDIO_CHUNK_LENGTH = 4 # Seconds
+SERVER_EXECUTABLE = "./result/bin/whisper-stream"
+ACTIVATION_PHRASE = "hi"
+AUDIO_CHUNK_LENGTH = 4
 
 # --- Global Variables ---
 streamer = None
 agent = None
 
-# --- Callback Functions ---
-def on_activation_detected():
-    """Callback function when the activation phrase is detected."""
-    print(f"\nActivation phrase '{ACTIVATION_PHRASE}' detected! Listening for command...")
-    # Optional: Add sound or visual cue here
-
 def handle_user_message(text):
-    """Callback function to handle the transcribed user message."""
     print(f"\nUser said: '{text}'")
 
     # Check for stop commands
@@ -56,29 +49,20 @@ if __name__ == "__main__":
     try:
         need_r = True
         while 1:
-                # Initialize the LLM Agent
-            # Make sure Agents/data.json can be written to
             agent = LLMAgent(history_file="Agents/data.json")
 
-            # Initialize WhisperStream
-            # Note: need_activation=True means it waits for the phrase initially.
-            # After a message is processed by handle_user_message, WhisperStream
-            # should ideally reset to wait for activation again based on its internal logic.
+            #  need_activation=True means it waits for the phrase initially.
             streamer = WhisperStream(
                 server_path=SERVER_EXECUTABLE,
                 activation_phrase=ACTIVATION_PHRASE,
-                activation_callback=on_activation_detected,
                 length=AUDIO_CHUNK_LENGTH,
                 need_activation=need_r # Start by waiting for activation phrase
             )
             need_r = False
             msg = streamer.ask()
-            streamer.stop() # Use start() for continuous listening
+            streamer.stop()
             handle_user_message(msg)
-            # Start the WhisperStream listener. This call will block until stopped.
-            print(f"\n--- WhisperStream starting. Waiting for activation phrase '{ACTIVATION_PHRASE}'. Press Ctrl+C to stop ---")
 
-        # Code here will likely only run after streamer.stop() is called
 
     except FileNotFoundError as e:
         print(f"\nError: {e}", file=sys.stderr)

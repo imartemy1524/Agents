@@ -1,156 +1,214 @@
+# Refactored Agents/llm_agent.py
 import requests
 import json
 import os
 import subprocess
 import sys
+import logging
+from typing import List, Dict, Optional, Any
+
+# Configure basic logging (consider configuring root logger in main script)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__) # Use a logger specific to this module
+
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a concise and helpful AI assistant. Respond clearly and briefly. "
+    "User input may contain transcription errors or repeated words due to voice recognition; "
+    "interpret the user's likely intent despite these potential inaccuracies, he may hav echo on his side - "
+    "ignore it and pretend as if it was a single sentence."
+)
+THINK_START_TAG = '<think>'
+THINK_END_TAG = '</think>'
 
 class LLMAgent:
     """
-    An agent to communicate with a local LLM (like LM Studio),
+    Agent to communicate with a local LLM API (LM Studio compatible),
     manage conversation history, and provide text-to-speech output.
     """
-    def __init__(self, history_file="Agents/data.json", lm_studio_url="http://localhost:1234/v1/chat/completions"):
+    def __init__(self, history_file: str = "Agents/data.json", lm_studio_url: str = "http://localhost:1234/v1/chat/completions"):
         """
         Initializes the agent, loads history, and sets up configuration.
 
         Args:
-            history_file (str): Path to the JSON file for storing conversation history.
-            lm_studio_url (str): The API endpoint for the LM Studio compatible server.
+            history_file: Path to the JSON file for storing conversation history.
+            lm_studio_url: The API endpoint for the LM Studio compatible server.
         """
-        self.history_file = history_file
-        self.lm_studio_url = lm_studio_url
-        self.messages = self._load_history()
-        # Add a default system prompt if history is empty or lacks one
-        if not self.messages or not any(m['role'] == 'system' for m in self.messages):
-             # Use the refined system prompt
-             new_system_prompt = "You are a concise and helpful AI assistant. Respond clearly and briefly. User input may contain transcription errors or repeated words due to voice recognition; interpret the user's likely intent despite these potential inaccuracies, he may hav echo on his side - ignore it and pretend as if it was a single sentence."
-             # Check if there's an old system prompt to replace, otherwise insert
-             system_prompt_index = -1
-             for i, msg in enumerate(self.messages):
-                 if msg.get('role') == 'system':
-                     system_prompt_index = i
-                     break
-             if system_prompt_index != -1:
-                 self.messages[system_prompt_index]['content'] = new_system_prompt
-             else:
-                self.messages.insert(0, {"role": "system", "content": new_system_prompt})
-             # Save history immediately after potentially adding/updating system prompt
-             self._save_history()
-        print(f"LLMAgent initialized. History loaded from {self.history_file}")
+        self.history_file: str = history_file
+        self.lm_studio_url: str = lm_studio_url
+        self.messages: List[Dict[str, str]] = self._load_history()
+        self._ensure_system_prompt()
+        log.info(f"LLMAgent initialized. History ({len(self.messages)} messages) loaded from {self.history_file}")
 
-
-    def _load_history(self):
+    def _load_history(self) -> List[Dict[str, str]]:
         """Loads conversation history from the JSON file."""
-        if os.path.exists(self.history_file):
-            try:
-                with open(self.history_file, 'r') as f:
-                    return json.load(f)
-            except json.JSONDecodeError:
-                print(f"Warning: Could not decode JSON from {self.history_file}. Starting with empty history.", file=sys.stderr)
-                return []
-            except Exception as e:
-                 print(f"Error loading history from {self.history_file}: {e}", file=sys.stderr)
-                 return []
-        return []
+        if not os.path.exists(self.history_file):
+            log.warning(f"History file not found: {self.history_file}. Starting fresh.")
+            return []
+        try:
+            with open(self.history_file, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+                if not isinstance(history, list):
+                    log.warning(f"History file {self.history_file} does not contain a list. Starting fresh.")
+                    return []
+                # Basic validation of message structure (optional but good practice)
+                valid_history = []
+                for msg in history:
+                    if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                        valid_history.append(msg)
+                    else:
+                        log.warning(f"Skipping invalid message format in history: {msg}")
+                return valid_history
+        except json.JSONDecodeError:
+            log.warning(f"Could not decode JSON from {self.history_file}. Starting fresh.")
+            return []
+        except Exception as e:
+            log.exception(f"Error loading history from {self.history_file}: {e}")
+            return []
+
+    def _ensure_system_prompt(self):
+        """Ensures a system prompt exists, adding or updating if necessary."""
+        system_prompt_index = -1
+        for i, msg in enumerate(self.messages):
+            if msg.get('role') == 'system':
+                system_prompt_index = i
+                break
+
+        if system_prompt_index != -1:
+            # Optionally update existing system prompt if needed, or just ensure it exists
+            if self.messages[system_prompt_index].get('content') != DEFAULT_SYSTEM_PROMPT:
+                 log.info("Updating existing system prompt.")
+                 # Uncomment the line below if you always want to force the default prompt
+                 # self.messages[system_prompt_index]['content'] = DEFAULT_SYSTEM_PROMPT
+                 # self._save_history() # Save if updated
+            else:
+                 log.debug("Existing system prompt is up-to-date.")
+        else:
+            log.info("No system prompt found. Adding default system prompt.")
+            self.messages.insert(0, {"role": "system", "content": DEFAULT_SYSTEM_PROMPT})
+            self._save_history() # Save immediately after adding
 
     def _save_history(self):
         """Saves the current conversation history to the JSON file."""
         try:
-            # Ensure the directory exists before trying to save
-            os.makedirs(os.path.dirname(self.history_file) or '.', exist_ok=True)
-            with open(self.history_file, 'w') as f:
-                json.dump(self.messages, f, indent=2)
-        except Exception as e:
-            print(f"Error saving history to {self.history_file}: {e}", file=sys.stderr)
+            # Ensure the directory exists
+            history_dir = os.path.dirname(self.history_file)
+            if history_dir and not os.path.exists(history_dir):
+                 log.info(f"Creating directory for history file: {history_dir}")
+                 os.makedirs(history_dir, exist_ok=True)
 
-    def _speak(self, text):
+            with open(self.history_file, 'w', encoding='utf-8') as f:
+                json.dump(self.messages, f, indent=2, ensure_ascii=False)
+            log.debug(f"History saved to {self.history_file}")
+        except IOError as e:
+            log.exception(f"IOError saving history to {self.history_file}: {e}")
+        except Exception as e:
+            log.exception(f"Unexpected error saving history to {self.history_file}: {e}")
+
+    def _speak(self, text: str):
         """Uses macOS 'say' command for text-to-speech."""
         if sys.platform != 'darwin':
-            print("TTS Info: 'say' command is only available on macOS. Skipping TTS.", file=sys.stderr)
+            log.info("TTS Info: 'say' command is only available on macOS. Skipping TTS.")
             return
-        if not text:
-             print("TTS Info: No text provided to speak.", file=sys.stderr)
+        if not text or text.isspace():
+             log.info("TTS Info: No text provided to speak.")
              return
         try:
+            # Using -r 300 for rate adjustment
+            command = ['say', "-r", "300", text]
+            log.debug(f"Executing TTS command: {' '.join(command)}")
             # Use subprocess.run for better control and error handling
-            subprocess.run(['say', "-r", "300", text], check=True, capture_output=True, text=True)
-            # print(f"TTS Spoke: '{text}'") # Optional: log successful TTS
+            result = subprocess.run(command, check=True, capture_output=True, text=True, encoding='utf-8')
+            log.debug(f"TTS Spoke: '{text}' (Output: {result.stdout}, {result.stderr})") # Optional: log successful TTS
         except FileNotFoundError:
-            print("Error: 'say' command not found. Is it installed and in PATH?", file=sys.stderr)
+            log.error("TTS Error: 'say' command not found. Is it installed and in PATH?")
         except subprocess.CalledProcessError as e:
-            print(f"Error during TTS execution: {e}", file=sys.stderr)
-            print(f"TTS Stderr: {e.stderr}", file=sys.stderr) # Log stderr for debugging
+            log.error(f"TTS Error during execution: {e}")
+            log.error(f"TTS Stderr: {e.stderr}") # Log stderr for debugging
         except Exception as e:
-            print(f"An unexpected error occurred during TTS: {e}", file=sys.stderr)
+            log.exception(f"An unexpected error occurred during TTS: {e}")
 
 
-    def sendUserMessage(self, user_message):
+    def sendUserMessage(self, user_message: str) -> Optional[str]:
         """
-        Sends a user message to the LLM, gets the response, speaks it, saves history, and returns the response.
+        Sends user message to LLM, gets response, speaks it, saves history, returns response.
 
         Args:
-            user_message (str): The message from the user.
+            user_message: The message from the user.
 
         Returns:
-            str or None: The text response from the LLM, or None if an error occurs or the response is empty.
+            The text response from the LLM, or None if an error occurs or response is empty.
         """
-        if not user_message:
-            print("User message is empty, skipping.", file=sys.stderr)
+        if not user_message or user_message.isspace():
+            log.warning("User message is empty or whitespace, skipping.")
             return None
 
-        # Append user message to history
+        # Append user message to history (temporarily)
         self.messages.append({"role": "user", "content": user_message})
+        log.debug(f"Appended user message: '{user_message}'")
+
+        assistant_message_content: Optional[str] = None # Initialize to None
 
         try:
-            # Prepare request payload
-            # Ensure messages payload is correctly formatted list of dicts
+            # Prepare request payload (ensure messages are valid)
             payload = {
                 "messages": [msg for msg in self.messages if isinstance(msg, dict) and 'role' in msg and 'content' in msg],
                 "temperature": 0.4, # Example temperature
-                # Add other parameters like max_tokens if needed by your LM Studio model/settings
-                "stream": False # Keep response handling simple
+                # "max_tokens": 150, # Consider adding token limits
+                "stream": False # Keeping simple for now
             }
 
-            # Send request to LM Studio
-            print(f"Sending request to {self.lm_studio_url}...")
-            response = requests.post(self.lm_studio_url, json=payload, timeout=120) # Added timeout
-            response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+            log.info(f"Sending request to LLM at {self.lm_studio_url}...")
+            response = requests.post(
+                self.lm_studio_url,
+                json=payload,
+                timeout=120.0 # Standard float timeout
+            )
+            response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
 
             # Process response
-            response_data = response.json()
-            assistant_message_content = ""
-            if response_data.get("choices") and len(response_data["choices"]) > 0:
-                message = response_data["choices"][0].get("message")
-                if message and message.get("content"):
-                     raw_content = message["content"].strip()
-                     # Remove <think>...</think> blocks if they exist at the start
-                     think_end_tag = '</think>'
-                     think_start_tag = '<think>' # Check for start tag too for robustness
+            response_data: Dict[str, Any] = response.json()
+            log.debug(f"LLM Raw Response Data: {response_data}")
 
-                     # Find the first closing tag
-                     think_end_index = raw_content.find(think_end_tag)
+            choices = response_data.get("choices")
+            if choices and isinstance(choices, list) and len(choices) > 0:
+                message = choices[0].get("message")
+                if message and isinstance(message, dict) and message.get("content"):
+                    raw_content: str = message["content"].strip()
+                    log.debug(f"LLM Raw Content: '{raw_content}'")
 
-                     if think_end_index != -1 and raw_content.startswith(think_start_tag):
-                         # If <think> is at the start and </think> is found,
-                         # extract the content after </think>
-                         assistant_message_content = raw_content[think_end_index + len(think_end_tag):].strip()
-                         if not assistant_message_content:
-                              print(f"Warning: Response contained only a <think> block: {raw_content}", file=sys.stderr)
-                              # Keep it empty, the next check will handle it.
-                     else:
-                         # No think block found at the start, or tags are mismatched/missing
-                         # Use the raw content as is
+                    # Refined <think>...</think> removal
+                    if raw_content.startswith(THINK_START_TAG):
+                         think_end_index = raw_content.find(THINK_END_TAG)
+                         if think_end_index != -1:
+                              # Extract content *after* the closing tag
+                              assistant_message_content = raw_content[think_end_index + len(THINK_END_TAG):].strip()
+                              think_content = raw_content[len(THINK_START_TAG):think_end_index]
+                              log.debug(f"Removed thought block: '{think_content}'. Remaining content: '{assistant_message_content}'")
+                              if not assistant_message_content:
+                                   log.warning(f"LLM response contained only a <think> block: '{raw_content}'")
+                                   # Keep assistant_message_content as empty string "" here
+                         else:
+                              # Starts with <think> but no closing tag found - treat as regular content? Or error?
+                              log.warning(f"LLM response started with '{THINK_START_TAG}' but no closing '{THINK_END_TAG}' found. Treating whole message as content.")
+                              assistant_message_content = raw_content
+                    else:
+                         # No think block found at the start
                          assistant_message_content = raw_content
+                else:
+                     log.warning("LLM response missing 'message' or 'content' structure in choices.")
+            else:
+                log.warning("LLM response missing 'choices' or choices list is empty.")
 
-            if not assistant_message_content:
-                 print("Warning: Received empty or improperly formatted response from LM Studio (after potential <think> removal).", file=sys.stderr)
-                 # Remove the user message that got no reply? Optional, but might prevent loops.
-                 self.messages.pop()
-                 return None # Return None
+            # Check if we actually got content
+            if not assistant_message_content: # Handles None or empty string ""
+                 log.warning("Received no valid assistant message content from LLM.")
+                 self.messages.pop() # Remove the user message that got no reply
+                 self._save_history() # Save the state without the failed user message
+                 return None # Return None explicitly
 
-            print(f"LLM Raw Response: '{assistant_message_content}'")
+            log.info(f"LLM Processed Response: '{assistant_message_content}'")
 
-            # Append assistant response to history
+            # Append valid assistant response to history
             self.messages.append({"role": "assistant", "content": assistant_message_content})
 
             # Save updated history
@@ -162,20 +220,30 @@ class LLMAgent:
             return assistant_message_content
 
         except requests.exceptions.Timeout:
-             print(f"Error: Request to LM Studio timed out ({self.lm_studio_url}).", file=sys.stderr)
+             log.error(f"Request to LM Studio timed out ({self.lm_studio_url}).")
              self.messages.pop() # Remove user message that failed
-             return "Error: The request to the language model timed out."
+             self._save_history()
+             # Return an error message *to the user*? Or just None? Returning None for programmatic use.
+             # Consider returning a specific error string if the calling code needs to know.
+             # e.g., return "Error: The request to the language model timed out."
+             return None
         except requests.exceptions.RequestException as e:
-            print(f"Error communicating with LM Studio at {self.lm_studio_url}: {e}", file=sys.stderr)
+            log.error(f"Error communicating with LLM at {self.lm_studio_url}: {e}")
             self.messages.pop() # Remove user message that failed
-            return f"Error: Could not reach LM Studio. {e}" # Return error message
+            self._save_history()
+            # e.g., return f"Error: Could not reach LM Studio. {e}"
+            return None
         except json.JSONDecodeError:
-             print("Error: Could not decode JSON response from LM Studio.", file=sys.stderr)
+             log.error("Could not decode JSON response from LM Studio.")
              self.messages.pop() # Remove user message that failed
-             return "Error: Invalid response format from LM Studio."
+             self._save_history()
+             # e.g., return "Error: Invalid response format from LM Studio."
+             return None
         except Exception as e:
-            print(f"An unexpected error occurred in sendUserMessage: {e}", file=sys.stderr)
+            log.exception(f"An unexpected error occurred in sendUserMessage: {e}")
             # Attempt to remove the last user message if an unexpected error occurred
             if self.messages and self.messages[-1].get("role") == "user":
                 self.messages.pop()
-            return f"Error: An unexpected error occurred. {e}" # Return error message
+                self._save_history()
+            # e.g., return f"Error: An unexpected error occurred. {e}"
+            return None

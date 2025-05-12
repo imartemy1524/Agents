@@ -10,32 +10,14 @@ BLANK_AUDIO = "[BLANK_AUDIO]"
 
 
 def normalize_word(word):
-    """
-    Normalizes a word by removing punctuation and converting to lowercase.
-    This is a placeholder function; actual implementation may vary.
-    """
     # Example normalization: remove punctuation and convert to lowercase
     return ''.join(char for char in word if char.isalnum()).lower()
 
 
 class WhisperStream:
-    """
-    Manages a whisper-server process, detects an activation phrase,
-    and streams subsequent text output word by word, operating in a single thread.
-    """
 
-    def __init__(self, server_path, activation_phrase, activation_callback,  length,
+    def __init__(self, server_path, activation_phrase, length,
                  need_activation):
-        """
-        Initializes the WhisperStream.
-
-        Args:
-            server_path (str): Path to the whisper-server executable.
-            activation_phrase (str): The phrase to listen for to start streaming.
-                                     Matching is case-insensitive.
-            length (int): Length of the audio chunk to process.
-            activation_callback (callable): Function called once on activation.
-        """
         if not os.path.exists(server_path):
             raise FileNotFoundError(f"Server executable not found at: {server_path}")
         if not os.access(server_path, os.X_OK):
@@ -43,7 +25,6 @@ class WhisperStream:
         self.length = int(length * 1000)  # Convert to milliseconds
         self.server_path = server_path
         self.activation_phrase = activation_phrase.lower()
-        self.activation_callback = activation_callback
 
         self.process = None
         self.activated = False if need_activation else True
@@ -54,10 +35,6 @@ class WhisperStream:
         self._ready = False
 
     def ask(self):
-        """
-        Starts the whisper-server process and runs the main processing loop.
-        This method will block until the server process exits or stop() is called.
-        """
         if self.process and self.process.poll() is None:
             print("WhisperStream is already running.", file=sys.stderr)
             return
@@ -89,7 +66,6 @@ class WhisperStream:
             print("WhisperStream processing loop finished.", file=sys.stderr)
 
     def _run_processing_loop(self):
-        """The main loop reading and processing output character by character."""
         while not self._stopped:
             if not self.process or self.process.poll() is not None:
                 print("Server process terminated unexpectedly.", file=sys.stderr)
@@ -188,7 +164,6 @@ class WhisperStream:
         print(f"Exiting processing loop. Server exit code: {exit_code}", file=sys.stderr)
 
     def _process_buffer(self):
-        """Processes the character buffer to find words and handle activation."""
         # Process words separated by whitespace (space, tab, newline)
         if ("[Start speaking]") in self.bob and not self._ready:
             self._ready = True
@@ -215,7 +190,6 @@ class WhisperStream:
 
 
     def _handle_words(self, words):
-        """Handles a complete word, checking for activation or streaming."""
         # print(f"Handling word: '{word}'", file=sys.stderr) # Debug
         if len(words) >= 2 and words[-1] == BLANK_AUDIO and any(i for i in words if i != BLANK_AUDIO):
             self.bob = ""
@@ -224,7 +198,6 @@ class WhisperStream:
         return None
 
     def stop(self):
-        """Signals the processing loop to stop and terminates the server process."""
         if self._stopped:
             # print("Stop already called.", file=sys.stderr)
             return

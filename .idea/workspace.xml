@@ -5,12 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e8b3927f-bc71-4c62-ac53-fb7ac88220e7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/module_1/1-chat.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/module_1/1-chat.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/module_1/2-graph.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/module_1/2-graph.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/module_1/5-tools.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/module_1/5-tools.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/detekt.py" beforeDir="false" afterPath="$PROJECT_DIR$/detekt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,8 +31,8 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python tests.Doctest via pytest for test1.calculate_math.executor": "Run",
     "Python tests.Doctest via pytest in test1.py.executor": "Run",
-    "Python.detekt.executor": "Debug",
-    "Python.test.executor": "Run",
+    "Python.detekt.executor": "Run",
+    "Python.test.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.com.insyncwithfoo.pyright.configurations.converters.pyrightls.ConfigurationsConverter": "true",
     "RunOnceActivity.com.insyncwithfoo.pyright.configurations.converters.v1.ConfigurationsConverter": "true",
@@ -51,7 +48,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Python.detekt">
+  <component name="RunManager" selected="Python.test">
     <configuration name="detekt" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Agents" />
       <option name="ENV_FILES" value="" />
@@ -146,8 +143,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.detekt" />
         <item itemvalue="Python.test" />
+        <item itemvalue="Python.detekt" />
         <item itemvalue="Python tests.Doctest via pytest for test1.calculate_math" />
         <item itemvalue="Python tests.Doctest via pytest in test1.py" />
       </list>
@@ -174,17 +171,24 @@
       <workItem from="1744980587806" duration="681000" />
       <workItem from="1744981432733" duration="463000" />
       <workItem from="1747072830880" duration="69000" />
-      <workItem from="1747076005977" duration="1888000" />
+      <workItem from="1747076005977" duration="5081000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="self._char_buffer" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Agents$Doctest_via_pytest_for_test1_calculate_math.coverage" NAME="Doctest via pytest for test1.calculate_math Coverage Results" MODIFIED="1742778319049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Agents$detekt.coverage" NAME="detekt Coverage Results" MODIFIED="1747077657002" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Agents$detekt.coverage" NAME="detekt Coverage Results" MODIFIED="1747078384005" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Agents$Doctest_via_pytest_in_test1_py.coverage" NAME="Doctest via pytest in test1.py Coverage Results" MODIFIED="1742778302755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Agents$test.coverage" NAME="test Coverage Results" MODIFIED="1742294320200" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Agents$test.coverage" NAME="test Coverage Results" MODIFIED="1747080942311" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
